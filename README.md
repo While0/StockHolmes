@@ -6,9 +6,9 @@ StockHolmes实现定时从巨潮和东财抓取业绩预告，过滤出预告中
 并使用一套策略，选取符合要求的股票邮件通知。
 
 StockHolmes基于以下开源架构：
-configuration2
-httpclient
-Spring 4.3
-Mybatis 3.8
-sqlite 3.0
+configuration2;
+httpclient;
+Spring 4.3;
+Mybatis 3.8;
+sqlite 3.0.
 
