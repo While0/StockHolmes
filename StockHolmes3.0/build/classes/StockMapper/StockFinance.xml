@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.mapper.StockFinanceMapper">
+	<resultMap type="com.stock.entity.StockFinance" id="StockFinance">
+		<id column="stock_id" property="stockid" />
+		<result column="stock_code" property="stockcode" />
+		<result column="stock_rise" property="stockrise" />
+		<result column="stock_gains" property="stockgains" />
+		<result column="stock_rise_desc" property="stockrisedesc" />
+		<result column="stock_gains_desc" property="stockgainsdesc" />
+		<result column="stock_gainreason" property="stockgainreason" />
+		<result column="create_time" property="createtime" />
+	</resultMap>
+
+	<insert id="insertStockFinance" parameterType="stockFinance"
+		flushCache="true" useGeneratedKeys="true" keyProperty="stockid">
+		insert into stock_finance
+		(stock_code,
+		stock_rise,
+		stock_gains,
+		stock_rise_desc,
+		stock_gains_desc,
+		stock_gainreason,
+		create_time)
+		values (#{stockcode},
+		#{stockrise},
+		#{stockgains},
+		#{stockrisedesc},
+		#{stockgainsdesc},
+		#{stockgainreason,jdbcType=VARCHAR},
+		#{createtime})
+	</insert>
+
+	<select id="selectStockFinance" resultMap="StockFinance">
+		select * from stock_finance
+	</select>
+
+	<select id="selectStockCode" resultType="String">
+		select stock_code from stock_finance
+	</select>
+
+</mapper>

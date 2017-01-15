@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE configuration PUBLIC 
+	"-//mybatis.org//DTD Config 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias alias="stockNotice" type="com.stock.entity.StockNotice" />
+		<typeAlias alias="stockFinance" type="com.stock.entity.StockFinance" />
+		<typeAlias alias="stockInfo" type="com.stock.entity.StockInfo" />
+		<typeAlias alias="stockScore" type="com.stock.entity.StockScore" />
+	</typeAliases>
+	<mappers>
+		<mapper resource="StockMapper/StockNotice.xml" />
+		<mapper resource="StockMapper/StockFinance.xml" />
+		<mapper resource="StockMapper/StockInfo.xml" />
+		<mapper resource="StockMapper/StockScore.xml" />
+	</mappers>
+</configuration>  

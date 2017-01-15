@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		  http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-4.0.xsd 
+           http://www.springframework.org/schema/task  
+		  http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		">
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:jdbc.properties" />
+	</bean>
+
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${db.driverClassName}" />
+		<property name="url" value="${db.url}" />
+		<property name="username" value="root" />
+		<property name="password" value="password" />
+		<property name="initialSize" value="10" />
+		<property name="maxTotal" value="100" />
+		<property name="maxIdle" value="100" />
+		<property name="maxWaitMillis" value="-1" />
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!--dataSource属性指定要用到的连接池 -->
+		<property name="dataSource" ref="dataSource" />
+		<!--configLocation属性指定mybatis的核心配置文件 -->
+		<!-- <property name="mapperLocations" value="classpath:StockMapper/*.xml"/> -->
+		<property name="configLocation" value="classpath:mybatisConfig.xml" />
+	</bean>
+
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.stock.mapper" />
+		<!-- <property name="sqlSessionFactory" ref="sqlSessionFactory" /> -->
+	</bean>
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<context:component-scan base-package="com.stock.dao" />
+	<context:component-scan base-package="com.stock.config" />
+	<context:component-scan base-package="com.stock.grab" />
+	<context:component-scan base-package="com.stock.policy" />
+	<context:component-scan base-package="com.stock.service" />
+	<context:component-scan base-package="com.stock.startup" />
+	<context:component-scan base-package="com.stock.util" />
+	<task:scheduled-tasks>
+		<task:scheduled ref="StockCronJob" method="stockPurge"
+			cron="0 0 10,19,21 ? * 7" />
+		<task:scheduled ref="StockCronJob" method="stockWork"
+			cron="0 0/30 * * * ?" />
+		<!-- <task:scheduled ref="StockCronJob" method="stockWork" cron="0/20 * 
+			* ? * 1-7"/> -->
+	</task:scheduled-tasks>
+
+</beans>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.mapper.StockScoreMapper">
+	<resultMap type="com.stock.entity.StockScore" id="StockScore">
+		<id column="stock_id" property="stockid" />
+		<id column="stock_code" property="stockcode" />
+		<result column="pe_score" property="pescore" />
+		<result column="rise_score" property="risescore" />
+		<result column="pe_rise_score" property="perisescore" />
+		<result column="value_score" property="valuescore" />
+		<result column="gain_score" property="gainscore" />
+		<result column="total_score" property="totalscore" />
+		<association property="StockNotice" javaType="com.stock.entity.StockNotice">
+			<id column="stock_id" property="stockid" />
+			<id column="stock_code" property="stockcode" />
+			<result column="notice_title" property="noticetitle" />
+			<result column="notice_link" property="noticelink" />
+			<result column="download_time" property="downloadtime" />
+			<result column="isdownload" property="isdownload" />
+		</association>
+	</resultMap>
+
+	<select id="selectNoticeTitle" parameterType="int" resultType="String">
+		select
+		b.notice_title
+		from stock_score a, stock_notice b
+		where
+		a.stock_code=b.stock_code
+		and
+		a.total_score>=#{stockminscore}
+	</select>
+
+	<insert id="insertStockScore" parameterType="stockScore"
+		flushCache="true">
+		insert into stock_score
+		(stock_id,
+		stock_code,
+		pe_score,
+		rise_score,
+		pe_rise_score,
+		value_score,
+		gain_score,
+		total_score)
+		values (#{stockid},
+		#{stockcode},
+		#{pescore},
+		#{risescore},
+		#{perisescore},
+		#{valuescore},
+		#{gainscore},
+		#{totalscore})
+	</insert>
+
+</mapper>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.mapper.StockNoticeMapper">
+	<resultMap type="com.stock.entity.StockNotice" id="StockNotice">
+		<id column="stock_id" property="stockid" />
+		<result column="stock_code" property="stockcode" />
+		<result column="notice_title" property="noticetitle" />
+		<result column="notice_link" property="noticelink" />
+		<result column="download_time" property="downloadtime" />
+		<result column="isdownload" property="isdownload" />
+	</resultMap>
+
+	<insert id="insertStockNotice" parameterType="stockNotice"
+		flushCache="true" useGeneratedKeys="true" keyProperty="stockid">
+		insert into stock_notice (stock_code,notice_title,notice_link,isdownload)
+		values (#{stockcode},#{noticetitle},#{noticelink},#{isdownload})
+	</insert>
+
+	<select id="countNoticeLink" parameterType="String" resultType="int">
+		select count(*) from stock_notice where notice_link=#{noticelink}
+	</select>
+
+	<select id="selectLink" parameterType="int" resultMap="StockNotice">
+		select * from stock_notice where isdownload=#{isdownload}
+	</select>
+
+	<select id="selectUnloadLink" resultMap="StockNotice">
+		Select *
+		from stock_notice where isdownload in
+		<foreach item="item" index="index" collection="list" open="("
+			separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+	<update id="updateStockNotice" flushCache="true" parameterType="stockNotice">
+		update stock_notice
+		<trim prefix="set" suffixOverrides=",">
+			<if test="stockid!=null">stock_id=#{stockid},</if>
+			<if test="downloadtime!=null">download_time=#{downloadtime},</if>
+			<if test="isdownload!=null">isdownload=#{isdownload},</if>
+		</trim>
+		WHERE stock_id=#{stockid}
+	</update>
+
+	<!-- <update id="updateStockNotice" flushCache="true" parameterType="stockNotice"> 
+		update stock_notice <trim prefix="set" suffixOverrides=","> <if test="stockid!=null">stock_id=#{stockid},</if> 
+		<if test="stockcode!=null">stock_code=#{stockcode},</if> <if test="noticetitle!=null">notice_title=#{noticetitle},</if> 
+		<if test="noticelink!=null">notice_link=#{noticelink},</if> <if test="downloadtime!=null">download_time=#{downloadtime},</if> 
+		<if test="isdownload!=null">isdownload=#{isdownload},</if> </trim> WHERE 
+		stock_id=#{stockid} </update> -->
+
+
+</mapper>

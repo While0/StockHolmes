@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stock.mapper.StockInfoMapper">
+	<!-- <resultMap type="com.stock.entity.StockInfo" id="StockInfo"> <id column="stock_id" 
+		property="stockid" /> <result column="stock_code" property="stockcode" /> 
+		<result column="stock_name" property="stockname" /> <result column="stock_pe" 
+		property="stockpe" /> <result column="stock_value" property="stockvalue" 
+		/> <result column="create_time" property="createtime" />Isanalysised </resultMap> -->
+
+	<resultMap type="com.stock.entity.StockInfo" id="StockInfo">
+		<id column="stock_id" property="stockid" />
+		<id column="stock_code" property="stockcode" />
+		<result column="stock_name" property="stockname" />
+		<result column="stock_pe" property="stockpe" />
+		<result column="stock_value" property="stockvalue" />
+		<result column="create_time" property="createtime" />
+		<result column="Isanalysised" property="Isanalysised" />
+		<association property="stockFinance" javaType="com.stock.entity.StockFinance">
+			<id column="stock_id" property="stockid" />
+			<id column="stock_code" property="stockcode" />
+			<result column="stock_rise" property="stockrise" />
+			<result column="stock_gains" property="stockgains" />
+			<result column="stock_rise_desc" property="stockrisedesc" />
+			<result column="stock_gains_desc" property="stockgainsdesc" />
+			<result column="stock_gainreason" property="stockgainreason" />
+			<result column="create_time" property="createtime" />
+		</association>
+	</resultMap>
+
+	<select id="selectFinanceInfo" parameterType="int" resultMap="StockInfo">
+		select
+		a.stock_id,
+		a.stock_code,
+		a.stock_name,
+		a.stock_pe,
+		a.stock_value,
+		b.stock_rise,
+		b.stock_gains,
+		b.stock_rise_desc,
+		b.stock_gains_desc,
+		b.stock_gainreason
+		from stock_info a, stock_finance b
+		where
+		a.stock_code=b.stock_code
+		and
+		a.Isanalysised=#{Isanalysised}
+	</select>
+
+	<insert id="insertStockInfo" parameterType="StockInfo"
+		flushCache="true" useGeneratedKeys="true" keyProperty="stockid">
+		insert into stock_info
+		(stock_code,
+		stock_name,
+		stock_pe,
+		stock_value,
+		create_time,
+		Isanalysised)
+		values (#{stockcode},
+		#{stockname},
+		#{stockpe},
+		#{stockvalue},
+		#{createtime},
+		#{Isanalysised})
+	</insert>
+
+	<update id="updateStockStatus" parameterType="stockInfo">
+		update stock_info
+		<trim prefix="set" suffixOverrides=",">
+			<if test="stockid!=null">stock_id=#{stockid},</if>
+			<if test="Isanalysised!=null">Isanalysised=#{Isanalysised},</if>
+		</trim>
+		WHERE stock_id=#{stockid}
+	</update>
+
+
+</mapper>
