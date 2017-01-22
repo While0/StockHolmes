@@ -29,15 +29,14 @@ public class StockReportAnalyzer extends StockNoticeAnalyzer {
 	@Autowired
 	private StockFinanceDao stockFinanceDao;
 	protected Logger logger = LoggerFactory.getLogger(getClass());
+	private int gainreasonmark = 0;
+	private StringBuffer stringbuffer = new StringBuffer("");
 
 	@Override
 	public JSONObject readStockNotice(File ReportFile) {
-		// File noticeFile = new File(noticeFileName);
 		JSONObject stockfinancebit = new JSONObject();
 		BufferedReader reader = null;
 		int keywordmark = -1;
-		StringBuffer stringbuffer = new StringBuffer("");
-		int gainreasonmark = 0;
 		String reportkeyword = stockconfig.getReportKeyword();
 		String patternrise = "(-?[1-9]\\d*\\.?\\d*%.+?-?[1-9]\\d*\\.?\\d*%)";
 		String patterngain = "(([1-9]\\d*,(\\d{3},?)*).+?([1-9]\\d*,(\\d{3},?)*))";
@@ -51,50 +50,19 @@ public class StockReportAnalyzer extends StockNoticeAnalyzer {
 				if (keywordmark == -1) {
 					keywordmark = textline.indexOf(reportkeyword);
 				}
-				// logger.debug("debug......"+keywordmark+"xxxxxxxxx"+reportkeyword);
-
 				if (keywordmark >= 0) {
 					if (!stockstringhandler.patternMatcher(patternrise, textline).equals("")) {
 						String rise = stockstringhandler.patternMatcher(patternrise, textline);
 						rise = stockstringhandler.trimComma(rise);
 						stockfinancebit.put("rise", rise);
 					}
-
 					if (!stockstringhandler.patternMatcher(patterngain, textline).equals("")) {
 						String gains = stockstringhandler.patternMatcher(patterngain, textline);
 						gains = stockstringhandler.trimComma(gains);
 						stockfinancebit.put("gains", gains);
 					}
-
-					if (textline.indexOf(stockconfig.getGainTurningKeyword()) >= 0) {
-						// if(textline.lastIndexOf("panfeng")>=0){
-						gainreasonmark++;
-						Pattern p = Pattern.compile(stockconfig.getGainTurningKeyword() + ".* "); // get
-																									// a
-																									// matcher
-																									// object
-						Matcher m = p.matcher(textline);
-						textline = m.replaceAll("");
-					}
-					// logger.debug("debug....mark....."+textline+"......."+gainreasonmark+"....."+textline.lastIndexOf("2016"));
-					if (textline.length() > 0) {
-						// logger.debug("debug....append....."+textline+"......."+gainreasonmark+"....."+textline.lastIndexOf("2016"));
-						String[] segment = textline.split(" ");
-						for (int i = 0; i < segment.length; i++) {
-							stringbuffer.append(segment[i].trim());
-						}
-						stringbuffer.append(System.getProperty("line.separator"));
-					}
-					if (textline.length() <= 0 && gainreasonmark == 0) {
-						// logger.debug("debug....delete....."+textline+"......."+gainreasonmark+"....."+textline.lastIndexOf("2016"));
-						stringbuffer = new StringBuffer("");
-					}
-					if (textline.length() <= 0 && gainreasonmark > 0) {
-						// logger.debug("debug....return....."+textline+"......."+gainreasonmark+"....."+textline.lastIndexOf("2016"));
-						stockfinancebit.put("gainreason", stringbuffer);
-					}
-
-					if (stockfinancebit.size() >= 3 && textline.length() <= 0) {
+					indexGainReason(textline, stockfinancebit);
+					if (stockfinancebit.containsKey("gains") &&stockfinancebit.containsKey("rise") && textline.length() <= 0) {
 						stockfinancebit.put("stockcode", ReportFile.getName().split("-")[0]);
 						logger.info("股票: " + (String) stockfinancebit.get("stockcode"));
 						logger.info("盈利增幅: " + (String) stockfinancebit.get("rise"));
@@ -119,12 +87,34 @@ public class StockReportAnalyzer extends StockNoticeAnalyzer {
 			}
 		}
 		logger.info("Done analyzing: " + ReportFile.toString());
-		if (stockfinancebit.size() >= 3) {
+		if (stockfinancebit.containsKey("gains") &&stockfinancebit.containsKey("rise")) {
 			return stockfinancebit;
 		} else {
-			logger.info("Cann't find the thing.");
+			logger.info("Cann't find the finance number.");
 		}
 		return null;
+	}
+
+	private void indexGainReason(String textline, JSONObject stockfinancebit) {
+		if (textline.indexOf(stockconfig.getGainTurningKeyword()) >= 0) {
+			gainreasonmark++;
+			Pattern p = Pattern.compile(stockconfig.getGainTurningKeyword() + ".* ");
+			Matcher m = p.matcher(textline);
+			textline = m.replaceAll("");
+		}
+		if (textline.length() > 0) {
+			String[] segment = textline.split(" ");
+			for (int i = 0; i < segment.length; i++) {
+				stringbuffer.append(segment[i].trim());
+			}
+			stringbuffer.append(System.getProperty("line.separator"));
+		}
+		if (textline.length() <= 0 && gainreasonmark == 0) {
+			stringbuffer = new StringBuffer("");
+		}
+		if (textline.length() <= 0 && gainreasonmark > 0) {
+			stockfinancebit.put("gainreason", stringbuffer);
+		}
 	}
 
 	@Override

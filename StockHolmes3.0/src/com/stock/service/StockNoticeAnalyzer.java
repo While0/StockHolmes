@@ -29,14 +29,15 @@ public class StockNoticeAnalyzer implements StockNoticeAnalysis {
 	@Autowired
 	private StockFinanceDao stockFinanceDao;
 	protected Logger logger = LoggerFactory.getLogger(getClass());
-
+	private int gainreasonmark = 0;
+	private StringBuffer stringbuffer = new StringBuffer("");
+	
 	@Override
 	public JSONObject readStockNotice(File noticeFile) {
 		// File noticeFile = new File(noticeFileName);
 		JSONObject stockfinancebit = new JSONObject();
 		ArrayList<String> stockriselist = new ArrayList<String>();
 		BufferedReader reader = null;
-
 		// String patternrise
 		// ="(?:"+stockconfig.getIncKeyword()+")((.+?%){1,})"; //
 		// [1-9]\\d*,(\\d{3},?)*
@@ -79,10 +80,15 @@ public class StockNoticeAnalyzer implements StockNoticeAnalysis {
 					stockriselist.add(gains);
 					logger.debug("获取季度盈利: " + (String) stockriselist.get(0));
 				}
-				if (stockfinancebit.size() >= 3) {
+				indexGainReason(tempString, stockfinancebit);
+				
+				if (stockfinancebit.containsKey("gains") &&stockfinancebit.containsKey("rise")&&tempString.indexOf("其他相关说明") >= 0) {
 					logger.debug("股票代码: " + (String) stockfinancebit.get("stockcode"));
 					logger.debug("盈利增幅: " + (String) stockfinancebit.get("rise"));
 					logger.debug("盈利区间: " + (String) stockfinancebit.get("gains"));
+					if (stockfinancebit.containsKey("gainreason")) {
+						logger.info("变动原因: " + stockfinancebit.get("gainreason").toString());
+					}
 					break;
 				}
 
@@ -105,7 +111,7 @@ public class StockNoticeAnalyzer implements StockNoticeAnalysis {
 				stockfinancebit.put("gains", stockriselist.get(0));
 			}
 		}
-		if (stockfinancebit.size() >= 3) {
+		if (stockfinancebit.containsKey("gains") &&stockfinancebit.containsKey("rise")) {
 			return stockfinancebit;
 		} else {
 			logger.info("Cann't find the finance number.");
@@ -113,6 +119,30 @@ public class StockNoticeAnalyzer implements StockNoticeAnalysis {
 		return null;
 	}
 
+	private void indexGainReason(String textline, JSONObject stockfinancebit) {
+		if (textline.indexOf(stockconfig.getGainTurningKeyword()) >= 0) {
+			gainreasonmark++;
+		}
+		if (textline.length() > 0&&textline.indexOf("其他相关说明") <0) {
+			String[] segment = textline.split(" ");
+			for (int i = 0; i < segment.length; i++) {
+				stringbuffer.append(segment[i].trim());
+			}
+			stringbuffer.append(System.getProperty("line.separator"));
+		}
+		if (textline.length() <= 0 && gainreasonmark == 0) {
+			stringbuffer = new StringBuffer("");
+		}
+		if (textline.indexOf("其他相关说明") >= 0&& gainreasonmark > 0) {
+			int skip=stringbuffer.lastIndexOf("原因说明");
+			logger.debug("skip...."+skip);
+			if(skip>0){
+				stringbuffer.delete(0, skip);
+			}
+			stockfinancebit.put("gainreason", stringbuffer);
+		}
+	}
+	
 	@Override
 	public JSONObject stockGains(JSONObject stockfinancebit) {
 		JSONObject stockGains = new JSONObject();
